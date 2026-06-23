@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMS Editor</title>
+    <link rel="stylesheet" href="/admin/styles.css" />
+  </head>
+  <body>
+    <main class="editor-shell">
+      <aside class="post-list-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">CMS Backend</p>
+            <h1>Visual Editor</h1>
+          </div>
+          <button class="icon-button" id="newPostButton" title="Create post">+</button>
+        </div>
+        <div class="post-list" id="postList"></div>
+      </aside>
+
+      <section class="compose-panel">
+        <form id="postForm" class="post-form">
+          <input type="hidden" id="postId" />
+          <div class="form-grid">
+            <label>
+              Title
+              <input id="titleInput" name="title" required maxlength="220" />
+            </label>
+            <label>
+              Slug
+              <input id="slugInput" name="slug" required pattern="[a-z0-9]+(?:-[a-z0-9]+)*" />
+            </label>
+            <label>
+              Status
+              <select id="statusInput" name="status">
+                <option value="draft">Draft</option>
+                <option value="published">Published</option>
+              </select>
+            </label>
+            <label>
+              Author
+              <input id="authorInput" name="author" required maxlength="120" />
+            </label>
+          </div>
+
+          <label>
+            Excerpt
+            <textarea id="excerptInput" name="excerpt" required maxlength="500" rows="3"></textarea>
+          </label>
+
+          <div class="form-grid">
+            <label>
+              Hero image URL
+              <input id="heroImageInput" name="heroImageUrl" type="url" />
+            </label>
+            <label>
+              Tags
+              <input id="tagsInput" name="tags" placeholder="Roadmap, News" />
+            </label>
+          </div>
+
+          <div class="toolbar" aria-label="Editor toolbar">
+            <button type="button" data-command="bold" title="Bold"><strong>B</strong></button>
+            <button type="button" data-command="italic" title="Italic"><em>I</em></button>
+            <button type="button" data-block="h2" title="Heading 2">H2</button>
+            <button type="button" data-block="h3" title="Heading 3">H3</button>
+            <button type="button" data-command="insertUnorderedList" title="Bullet list">•</button>
+            <button type="button" data-block="blockquote" title="Quote">“”</button>
+            <button type="button" data-command="createLink" title="Link">↗</button>
+            <button type="button" data-block="p" title="Paragraph">¶</button>
+          </div>
+
+          <div id="bodyEditor" class="body-editor" contenteditable="true" spellcheck="true"></div>
+
+          <div class="actions">
+            <p id="saveStatus" class="save-status" role="status"></p>
+            <button type="submit" class="primary-button">Save Post</button>
+          </div>
+        </form>
+      </section>
+    </main>
+
+    <script type="module" src="/admin/editor.js"></script>
+  </body>
+</html>

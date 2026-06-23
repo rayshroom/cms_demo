@@ -1,0 +1,14 @@
+node_modules/
+dist/
+bin/
+obj/
+**/bin/
+**/obj/
+.env
+.env.local
+*.tsbuildinfo
+.DS_Store
+.dotnet-sdk/
+.dotnet-home/
+.dotnet-tmp/
+apps/umbraco/appsettings.Local.json
