@@ -4,6 +4,10 @@ export interface BackendConfig {
   port: number;
   storageMode: CmsStorageMode;
   sqlServerConnectionString: string | null;
+  adminUsername: string;
+  adminPassword: string;
+  adminSessionSecret: string;
+  adminSecureCookie: boolean;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig {
@@ -24,6 +28,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BackendConfig 
   return {
     port: Number(env.PORT ?? 8787),
     storageMode,
-    sqlServerConnectionString
+    sqlServerConnectionString,
+    adminUsername: env.ADMIN_USERNAME ?? "admin",
+    adminPassword: env.ADMIN_PASSWORD ?? "admin",
+    adminSessionSecret: env.ADMIN_SESSION_SECRET ?? "cms-demo-local-admin-session",
+    adminSecureCookie: env.ADMIN_SECURE_COOKIE === "true"
   };
 }

@@ -11,7 +11,12 @@ const repository: CmsRepository =
     ? await SqlServerCmsRepository.connect(config.sqlServerConnectionString!)
     : new MemoryCmsRepository();
 
-const app = createApp(repository);
+const app = createApp(repository, {
+  username: config.adminUsername,
+  password: config.adminPassword,
+  sessionSecret: config.adminSessionSecret,
+  secureCookie: config.adminSecureCookie
+});
 
 app.listen(config.port, () => {
   console.log(

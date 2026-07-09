@@ -8,22 +8,37 @@ import {
   UpsertNewsPostInputSchema,
   UpsertRoadmapItemInputSchema
 } from "@cms-demo/cms-contract";
+import { createAdminAuth, type AdminAuthConfig } from "./adminAuth.js";
 import { ConflictError, NotFoundError } from "./errors.js";
 import type { CmsRepository } from "./repositories/types.js";
 
 type AsyncHandler = (request: Request, response: Response, next: NextFunction) => Promise<void>;
 
-export function createApp(repository: CmsRepository) {
+export function createApp(repository: CmsRepository, adminAuthConfig: AdminAuthConfig) {
   const app = express();
   const adminRoot = path.resolve(process.cwd(), "public/admin");
+  const adminAuth = createAdminAuth(adminAuthConfig);
 
   app.use(cors({ origin: true }));
   app.use(express.json({ limit: "1mb" }));
-  app.use("/admin", express.static(adminRoot, { extensions: ["html"] }));
 
   app.get("/api/health", (_request, response) => {
     response.json({ ok: true });
   });
+
+  app.post("/api/admin/login", adminAuth.login);
+  app.post("/api/admin/logout", adminAuth.logout);
+  app.get("/api/admin/session", adminAuth.session);
+
+  app.use("/admin", (request, response, next) => {
+    if (isPublicAdminFile(request.path)) {
+      next();
+      return;
+    }
+
+    adminAuth.requireAdminPage(request, response, next);
+  });
+  app.use("/admin", express.static(adminRoot, { extensions: ["html"] }));
 
   app.get(
     "/api/cms/site",
@@ -53,6 +68,8 @@ export function createApp(repository: CmsRepository) {
       response.json(post);
     })
   );
+
+  app.use("/api/admin", adminAuth.requireAdminApi);
 
   app.get(
     "/api/admin/posts",
@@ -111,6 +128,14 @@ export function createApp(repository: CmsRepository) {
   app.use(errorHandler);
 
   return app;
+}
+
+function isPublicAdminFile(requestPath: string) {
+  return (
+    requestPath === "/login.html" ||
+    requestPath === "/login.js" ||
+    requestPath === "/styles.css"
+  );
 }
 
 function asyncRoute(handler: AsyncHandler) {

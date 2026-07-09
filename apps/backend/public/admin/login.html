@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CMS Login</title>
+    <link rel="stylesheet" href="/admin/styles.css" />
+  </head>
+  <body>
+    <main class="login-shell">
+      <form id="loginForm" class="login-panel">
+        <p class="eyebrow">CMS Backend</p>
+        <h1>Admin Login</h1>
+
+        <label>
+          Username
+          <input id="usernameInput" name="username" autocomplete="username" required />
+        </label>
+
+        <label>
+          Password
+          <input
+            id="passwordInput"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+
+        <div class="actions">
+          <p id="loginStatus" class="save-status" role="status"></p>
+          <button type="submit" class="primary-button">Log In</button>
+        </div>
+      </form>
+    </main>
+
+    <script type="module" src="/admin/login.js"></script>
+  </body>
+</html>

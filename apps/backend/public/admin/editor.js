@@ -11,6 +11,7 @@ const state = {
 const elements = {
   postList: document.querySelector("#postList"),
   newPostButton: document.querySelector("#newPostButton"),
+  logoutButton: document.querySelector("#logoutButton"),
   form: document.querySelector("#postForm"),
   postId: document.querySelector("#postId"),
   title: document.querySelector("#titleInput"),
@@ -53,6 +54,11 @@ elements.newPostButton.addEventListener("click", () => {
   state.activePost = null;
   fillForm(createEmptyPost());
   setSaveStatus("Draft ready.");
+});
+
+elements.logoutButton.addEventListener("click", async () => {
+  await fetch("/api/admin/logout", { method: "POST" });
+  window.location.href = "/admin/login.html";
 });
 
 elements.title.addEventListener("input", () => {

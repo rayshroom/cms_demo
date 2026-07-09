@@ -20,6 +20,13 @@ Default URLs:
 - CMS backend API: `http://localhost:8787/api`
 - CMS visual editor: `http://localhost:8787/admin`
 
+Default CMS admin login:
+
+- Username: `admin`
+- Password: `admin`
+
+Override these with `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_SECRET` when needed.
+
 ## Umbraco Backoffice
 
 The Umbraco bootstrap lives in `apps/umbraco` and targets .NET 10 / Umbraco 17. It is configured with Delivery API enabled and does not include a SQLite fallback.
