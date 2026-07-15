@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import type { CmsSiteSlice } from "@cms-demo/cms-contract";
-import { cmsContentProvider } from "./createCmsContentProvider";
 
-export type CmsSiteContentState =
+export type CmsResourceState<T> =
   | { status: "loading"; data: null; error: null }
-  | { status: "ready"; data: CmsSiteSlice; error: null }
+  | { status: "ready"; data: T; error: null }
   | { status: "error"; data: null; error: string };
 
-export function useCmsSiteContent(): CmsSiteContentState {
-  const [state, setState] = useState<CmsSiteContentState>({
+export type CmsResourceLoader<T> = (signal?: AbortSignal) => Promise<T>;
+
+export function useCmsResource<T>(load: CmsResourceLoader<T>): CmsResourceState<T> {
+  const [state, setState] = useState<CmsResourceState<T>>({
     status: "loading",
     data: null,
     error: null
@@ -17,8 +17,7 @@ export function useCmsSiteContent(): CmsSiteContentState {
   useEffect(() => {
     const controller = new AbortController();
 
-    cmsContentProvider
-      .getSiteContent(controller.signal)
+    load(controller.signal)
       .then((data) => setState({ status: "ready", data, error: null }))
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -30,7 +29,7 @@ export function useCmsSiteContent(): CmsSiteContentState {
       });
 
     return () => controller.abort();
-  }, []);
+  }, [load]);
 
   return state;
 }

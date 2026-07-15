@@ -1,8 +1,8 @@
-import type { NewsListItem, NewsVisualVariant } from "@cms-demo/cms-contract";
-import type { CmsSiteContentState } from "../cms/useCmsSiteContent";
+import type { NewsListItem, NewsVisualVariant } from "@cms-demo/cms-contract/news";
+import type { FeaturedNewsState } from "../cms/news/useFeaturedNews";
 import styles from "../styles/TdsPage.module.css";
 
-export function NewsSection({ state }: { state: CmsSiteContentState }) {
+export function NewsSection({ state }: { state: FeaturedNewsState }) {
   return (
     <section className={styles.newsSection} id="section-updates">
       <div className={styles.container}>
@@ -28,7 +28,7 @@ export function NewsSection({ state }: { state: CmsSiteContentState }) {
         ) : null}
         {state.status === "ready" ? (
           <div className={styles.newsGrid}>
-            {state.data.featuredNews.map((item) => (
+            {state.data.map((item) => (
               <NewsCard item={item} key={item.id} />
             ))}
           </div>

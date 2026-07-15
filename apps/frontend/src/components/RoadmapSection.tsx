@@ -4,8 +4,8 @@ import type {
   RoadmapProduct,
   RoadmapQuarter,
   RoadmapStatus
-} from "@cms-demo/cms-contract";
-import type { CmsSiteContentState } from "../cms/useCmsSiteContent";
+} from "@cms-demo/cms-contract/roadmap";
+import type { RoadmapContentState } from "../cms/roadmap/useRoadmapContent";
 import styles from "../styles/TdsPage.module.css";
 
 type ViewMode = "board" | "gantt";
@@ -21,7 +21,7 @@ const quarterLabels: Record<RoadmapQuarter, string> = {
 
 const quarters = ["Q1", "Q2", "Q3", "Q4"] as const;
 
-export function RoadmapSection({ state }: { state: CmsSiteContentState }) {
+export function RoadmapSection({ state }: { state: RoadmapContentState }) {
   const [query, setQuery] = useState("");
   const [product, setProduct] = useState<ProductFilter>("all");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -31,7 +31,7 @@ export function RoadmapSection({ state }: { state: CmsSiteContentState }) {
     if (state.status !== "ready") return [];
     const normalizedQuery = query.trim().toLocaleLowerCase();
 
-    return state.data.roadmap.filter(
+    return state.data.filter(
       (item) =>
         (product === "all" || item.product === product) &&
         (status === "all" || item.status === status) &&
@@ -119,7 +119,7 @@ export function RoadmapSection({ state }: { state: CmsSiteContentState }) {
           <div className={styles.emptyState}>No roadmap items match the selected filters.</div>
         ) : null}
         {state.status === "ready" && filteredItems.length > 0 && view === "board" ? (
-          <RoadmapBoard allItems={state.data.roadmap} items={filteredItems} />
+          <RoadmapBoard allItems={state.data} items={filteredItems} />
         ) : null}
         {state.status === "ready" && filteredItems.length > 0 && view === "gantt" ? (
           <RoadmapGantt items={filteredItems} />

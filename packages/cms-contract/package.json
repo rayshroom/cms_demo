@@ -1,6 +1,6 @@
 {
   "name": "@cms-demo/cms-contract",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,6 +8,26 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./api-paths": {
+      "types": "./dist/apiPaths.d.ts",
+      "import": "./dist/apiPaths.js"
+    },
+    "./common": {
+      "types": "./dist/common.d.ts",
+      "import": "./dist/common.js"
+    },
+    "./news": {
+      "types": "./dist/news.d.ts",
+      "import": "./dist/news.js"
+    },
+    "./roadmap": {
+      "types": "./dist/roadmap.d.ts",
+      "import": "./dist/roadmap.js"
+    },
+    "./site": {
+      "types": "./dist/site.d.ts",
+      "import": "./dist/site.js"
     }
   },
   "files": [

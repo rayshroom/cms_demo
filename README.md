@@ -36,6 +36,8 @@ npm run dev
 
 Default URL: `http://127.0.0.1:5187`
 
+CMS integration is organized by content domain. Roadmap and news each own their source interface, HTTP adapter, mock adapter, fixture, and React hook, while `cms/core` contains shared transport and async-state infrastructure. See `apps/frontend/src/cms/README.md` for the extension checklist used when adding more domains.
+
 To render the shared contract from the Express CMS, create `apps/frontend/.env.local`:
 
 ```sh

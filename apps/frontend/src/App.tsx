@@ -5,10 +5,12 @@ import { PlatformSection } from "./components/PlatformSection";
 import { RoadmapSection } from "./components/RoadmapSection";
 import { SiteFooter } from "./components/SiteFooter";
 import { SolutionsSection } from "./components/SolutionsSection";
-import { useCmsSiteContent } from "./cms/useCmsSiteContent";
+import { useFeaturedNews } from "./cms/news/useFeaturedNews";
+import { useRoadmapContent } from "./cms/roadmap/useRoadmapContent";
 
 export function App() {
-  const cms = useCmsSiteContent();
+  const roadmap = useRoadmapContent();
+  const featuredNews = useFeaturedNews();
 
   return (
     <div id="top">
@@ -16,8 +18,8 @@ export function App() {
         <HeroSection />
         <PlatformSection />
         <SolutionsSection />
-        <RoadmapSection state={cms} />
-        <NewsSection state={cms} />
+        <RoadmapSection state={roadmap} />
+        <NewsSection state={featuredNews} />
         <ContactSection />
         <SiteFooter />
       </main>
