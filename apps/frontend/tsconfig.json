@@ -1,13 +1,16 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",
-    "paths": {
-      "@cms-demo/cms-contract": [
-        "../../packages/cms-contract/src/index.ts"
-      ]
-    },
     "types": [
       "vite/client"
     ],

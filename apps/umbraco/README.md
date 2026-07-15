@@ -8,16 +8,17 @@ This app is the Umbraco side of the compromise architecture:
 
 ## Run
 
-The project targets .NET 10 and uses the workspace-local SDK in `.dotnet-sdk`.
+The project targets .NET 10 and uses the repo-local SDK in `.dotnet-sdk`.
 
 ```sh
-npm run umbraco:build
+cd apps/umbraco
+./scripts/dotnet.sh build CmsDemo.Umbraco.csproj
 ```
 
 ```sh
 export ConnectionStrings__umbracoDbDSN="Server=tcp:<server>.database.windows.net,1433;Initial Catalog=<db>;User ID=<user>;Password=<password>;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 export ConnectionStrings__umbracoDbDSN_ProviderName="Microsoft.Data.SqlClient"
-npm run umbraco:run
+./scripts/run.sh
 ```
 
 Open `http://127.0.0.1:9138/umbraco` for the install/backoffice flow.

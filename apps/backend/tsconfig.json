@@ -1,10 +1,17 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "rootDir": "src",
+    "target": "ES2022",
+    "useDefineForClassFields": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "outDir": "dist",
+    "rootDir": "src",
     "types": [
       "node"
     ]

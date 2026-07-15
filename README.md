@@ -1,34 +1,42 @@
 # CMS Demo
 
-This repo contains three independently useful pieces:
+This repository contains four independently managed projects. It intentionally does not use npm workspaces or root-level package management.
 
 - `packages/cms-contract`: shared Zod schemas, TypeScript types, and API path helpers.
-- `apps/backend`: Express CMS API, Azure SQL / SQL Server compatible persistence, and a visual editor at `/admin`.
-- `apps/umbraco`: Umbraco backoffice bootstrap for the Azure SQL-first CMS route.
-- `apps/frontend`: Vite + React + TypeScript SPA rebuilt from the TDS Data Platform static reference. It uses CSS Modules and renders contract-backed roadmap/news sections through a swappable CMS provider.
+- `apps/frontend`: Vite + React + TypeScript SPA rebuilt from the TDS Data Platform reference.
+- `apps/backend`: Express CMS API, Azure SQL / SQL Server persistence, and the visual editor at `/admin`.
+- `apps/umbraco`: .NET 10 / Umbraco 17 backoffice and CMS contract adapter.
 
-## Run Locally
+Each npm project owns its own `package-lock.json` and `node_modules`. Run npm commands inside the project you want to work on; there is no root `npm install`, `npm run dev`, or `npm run build`.
+
+## CMS contract
+
+Frontend and backend install a versioned contract tarball from `packages/cms-contract/releases`. The tarball lets both consumers install independently without npm traversing another project.
+
+Install, validate, and rebuild the contract package:
 
 ```sh
-npm install
+cd packages/cms-contract
+npm ci
+npm run typecheck
+npm pack --pack-destination releases
+```
+
+When the contract changes, bump its version, generate the new tarball, and update the tarball path in both consumer `package.json` files.
+
+## Frontend
+
+The frontend uses its in-browser mock provider by default, so it runs without either CMS backend:
+
+```sh
+cd apps/frontend
+npm ci
 npm run dev
 ```
 
-Default URLs:
+Default URL: `http://127.0.0.1:5187`
 
-- Frontend: `http://127.0.0.1:5187`
-- CMS backend API: `http://localhost:8787/api`
-- CMS visual editor: `http://localhost:8787/admin`
-
-## Frontend CMS provider
-
-The frontend uses its in-browser mock provider by default, so it can run without the CMS backend:
-
-```sh
-npm run dev:frontend
-```
-
-To render the same shared contract from the Express CMS instead, create `apps/frontend/.env.local`:
+To render the shared contract from the Express CMS, create `apps/frontend/.env.local`:
 
 ```sh
 VITE_CMS_PROVIDER=http
@@ -37,28 +45,39 @@ VITE_CMS_API_BASE=http://localhost:8787/api
 
 The public content endpoints are:
 
-- `GET /api/cms/site` — the combined homepage slice
-- `GET /api/cms/roadmap` — roadmap items
-- `GET /api/cms/news` — published news cards
-- `GET /api/cms/news/:slug` — a published news post
+- `GET /api/cms/site` — combined homepage content.
+- `GET /api/cms/roadmap` — roadmap items.
+- `GET /api/cms/news` — published news cards.
+- `GET /api/cms/news/:slug` — a published news post.
 
-Both mock and HTTP responses are validated with `packages/cms-contract` before components render.
+## Simple CMS backend
 
-Default CMS admin login:
-
-- Username: `admin`
-- Password: `admin`
-
-Override these with `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_SECRET` when needed.
-
-## Umbraco Backoffice
-
-The Umbraco bootstrap lives in `apps/umbraco` and targets .NET 10 / Umbraco 17. It is configured with Delivery API enabled and does not include a SQLite fallback.
-
-Build it with the workspace-local SDK:
+Install and start only the backend project:
 
 ```sh
-npm run umbraco:build
+cd apps/backend
+npm ci
+npm run dev
+```
+
+Default URLs:
+
+- API: `http://localhost:8787/api`
+- Visual editor: `http://localhost:8787/admin`
+
+The backend uses seeded in-memory content by default. Copy `apps/backend/.env.example` values into your environment to select Azure SQL / SQL Server storage.
+
+Default CMS admin credentials are `admin` / `admin`. Override them with `ADMIN_USERNAME`, `ADMIN_PASSWORD`, and `ADMIN_SESSION_SECRET`.
+
+The Azure SQL schema lives in `apps/backend/sql/001_create_cms_schema.sql`. The backend also runs the schema bootstrap when SQL Server storage is enabled.
+
+## Umbraco
+
+Umbraco is independent from npm and restores its packages with NuGet:
+
+```sh
+cd apps/umbraco
+./scripts/dotnet.sh build CmsDemo.Umbraco.csproj
 ```
 
 Run it with Azure SQL connection settings:
@@ -66,23 +85,10 @@ Run it with Azure SQL connection settings:
 ```sh
 export ConnectionStrings__umbracoDbDSN="Server=tcp:<server>.database.windows.net,1433;Initial Catalog=<db>;User ID=<user>;Password=<password>;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
 export ConnectionStrings__umbracoDbDSN_ProviderName="Microsoft.Data.SqlClient"
-npm run umbraco:run
+./scripts/run.sh
 ```
 
-Default Umbraco URLs:
+Default URLs:
 
 - Backoffice/install: `http://127.0.0.1:9138/umbraco`
-- Contract adapter skeleton: `http://127.0.0.1:9138/api/cms-contract/health`
-
-The backend uses seeded in-memory content by default. Set `CMS_DATABASE_PROVIDER=sqlserver` and `AZURE_SQL_CONNECTION_STRING` or `SQLSERVER_CONNECTION_STRING` to use Azure SQL / SQL Server.
-
-## Azure SQL
-
-The Azure SQL compatible schema lives in `apps/backend/sql/001_create_cms_schema.sql`. The backend also runs the same schema bootstrap at startup when SQL Server storage is enabled.
-
-Required tables:
-
-- `dbo.cms_news_posts`
-- `dbo.cms_roadmap_items`
-
-The schema stores rich content and tags as JSON text in `NVARCHAR(MAX)` columns with `ISJSON` checks, which keeps the contract portable while staying compatible with Azure SQL.
+- Contract adapter health: `http://127.0.0.1:9138/api/cms-contract/health`
