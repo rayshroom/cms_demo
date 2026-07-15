@@ -25,6 +25,9 @@ interface NewsPostRow {
   status: "draft" | "published";
   published_at: Date | null;
   hero_image_url: string | null;
+  cta_label: string;
+  visual_variant: NewsPost["visualVariant"];
+  sort_order: number;
   author: string;
   tags_json: string;
   body_json: string;
@@ -37,10 +40,18 @@ interface RoadmapRow {
   title: string;
   description: string;
   status: "planned" | "in_progress" | "launched";
+  product: RoadmapItem["product"];
+  roadmap_year: number;
   quarter: string;
   sort_order: number;
   updated_at: Date;
 }
+
+type PersistedNewsPostInput = UpsertNewsPostInput & {
+  ctaLabel: string;
+  visualVariant: NewsPost["visualVariant"];
+  sortOrder: number;
+};
 
 export class SqlServerCmsRepository implements CmsRepository {
   private constructor(private readonly pool: sql.ConnectionPool) {}
@@ -58,9 +69,9 @@ export class SqlServerCmsRepository implements CmsRepository {
 
   async listRoadmap(): Promise<RoadmapItem[]> {
     const result = await this.pool.request().query<RoadmapRow>(`
-      SELECT id, title, description, status, quarter, sort_order, updated_at
+      SELECT id, title, description, status, product, roadmap_year, quarter, sort_order, updated_at
       FROM dbo.cms_roadmap_items
-      ORDER BY sort_order ASC, updated_at DESC
+      ORDER BY roadmap_year ASC, sort_order ASC, updated_at DESC
     `);
     return result.recordset.map(mapRoadmapRow);
   }
@@ -74,25 +85,28 @@ export class SqlServerCmsRepository implements CmsRepository {
       .input("title", sql.NVarChar(160), parsed.title)
       .input("description", sql.NVarChar(600), parsed.description)
       .input("status", sql.NVarChar(20), parsed.status)
+      .input("product", sql.NVarChar(80), parsed.product)
+      .input("roadmap_year", sql.SmallInt, parsed.year)
       .input("quarter", sql.NVarChar(24), parsed.quarter)
       .input("sort_order", sql.Int, parsed.sortOrder).query<RoadmapRow>(`
         INSERT INTO dbo.cms_roadmap_items
-          (id, title, description, status, quarter, sort_order)
+          (id, title, description, status, product, roadmap_year, quarter, sort_order)
         OUTPUT INSERTED.id, INSERTED.title, INSERTED.description, INSERTED.status,
-          INSERTED.quarter, INSERTED.sort_order, INSERTED.updated_at
+          INSERTED.product, INSERTED.roadmap_year, INSERTED.quarter, INSERTED.sort_order,
+          INSERTED.updated_at
         VALUES
-          (@id, @title, @description, @status, @quarter, @sort_order)
+          (@id, @title, @description, @status, @product, @roadmap_year, @quarter, @sort_order)
       `);
     return mapRoadmapRow(result.recordset[0]);
   }
 
   async listPublishedNews(): Promise<NewsListItem[]> {
     const result = await this.pool.request().query<NewsPostRow>(`
-      SELECT id, slug, title, excerpt, status, published_at, hero_image_url, author,
-        tags_json, body_json, created_at, updated_at
+      SELECT id, slug, title, excerpt, status, published_at, hero_image_url, cta_label,
+        visual_variant, sort_order, author, tags_json, body_json, created_at, updated_at
       FROM dbo.cms_news_posts
       WHERE status = N'published'
-      ORDER BY COALESCE(published_at, updated_at) DESC
+      ORDER BY sort_order ASC, COALESCE(published_at, updated_at) DESC
     `);
     return result.recordset.map(mapNewsRow).map(toNewsListItem);
   }
@@ -101,8 +115,8 @@ export class SqlServerCmsRepository implements CmsRepository {
     const result = await this.pool
       .request()
       .input("slug", sql.NVarChar(180), slug).query<NewsPostRow>(`
-        SELECT id, slug, title, excerpt, status, published_at, hero_image_url, author,
-          tags_json, body_json, created_at, updated_at
+        SELECT id, slug, title, excerpt, status, published_at, hero_image_url, cta_label,
+          visual_variant, sort_order, author, tags_json, body_json, created_at, updated_at
         FROM dbo.cms_news_posts
         WHERE slug = @slug AND status = N'published'
       `);
@@ -111,8 +125,8 @@ export class SqlServerCmsRepository implements CmsRepository {
 
   async listAdminPosts(): Promise<NewsListItem[]> {
     const result = await this.pool.request().query<NewsPostRow>(`
-      SELECT id, slug, title, excerpt, status, published_at, hero_image_url, author,
-        tags_json, body_json, created_at, updated_at
+      SELECT id, slug, title, excerpt, status, published_at, hero_image_url, cta_label,
+        visual_variant, sort_order, author, tags_json, body_json, created_at, updated_at
       FROM dbo.cms_news_posts
       ORDER BY updated_at DESC
     `);
@@ -123,8 +137,8 @@ export class SqlServerCmsRepository implements CmsRepository {
     const result = await this.pool
       .request()
       .input("id", sql.UniqueIdentifier, id).query<NewsPostRow>(`
-        SELECT id, slug, title, excerpt, status, published_at, hero_image_url, author,
-          tags_json, body_json, created_at, updated_at
+        SELECT id, slug, title, excerpt, status, published_at, hero_image_url, cta_label,
+          visual_variant, sort_order, author, tags_json, body_json, created_at, updated_at
         FROM dbo.cms_news_posts
         WHERE id = @id
       `);
@@ -136,17 +150,20 @@ export class SqlServerCmsRepository implements CmsRepository {
     const id = randomUUID();
     const publishedAt =
       parsed.status === "published" ? parsed.publishedAt ?? new Date().toISOString() : null;
+    const persisted = resolveNewsInput(parsed);
 
     try {
-      const result = await this.postRequest(parsed, id, publishedAt).query<NewsPostRow>(`
+      const result = await this.postRequest(persisted, id, publishedAt).query<NewsPostRow>(`
         INSERT INTO dbo.cms_news_posts
-          (id, slug, title, excerpt, status, published_at, hero_image_url, author, tags_json, body_json)
+          (id, slug, title, excerpt, status, published_at, hero_image_url, cta_label,
+          visual_variant, sort_order, author, tags_json, body_json)
         OUTPUT INSERTED.id, INSERTED.slug, INSERTED.title, INSERTED.excerpt, INSERTED.status,
-          INSERTED.published_at, INSERTED.hero_image_url, INSERTED.author, INSERTED.tags_json,
+          INSERTED.published_at, INSERTED.hero_image_url, INSERTED.cta_label,
+          INSERTED.visual_variant, INSERTED.sort_order, INSERTED.author, INSERTED.tags_json,
           INSERTED.body_json, INSERTED.created_at, INSERTED.updated_at
         VALUES
-          (@id, @slug, @title, @excerpt, @status, @published_at, @hero_image_url, @author,
-          @tags_json, @body_json)
+          (@id, @slug, @title, @excerpt, @status, @published_at, @hero_image_url, @cta_label,
+          @visual_variant, @sort_order, @author, @tags_json, @body_json)
       `);
       return mapNewsRow(result.recordset[0]);
     } catch (error) {
@@ -168,9 +185,10 @@ export class SqlServerCmsRepository implements CmsRepository {
       parsed.status === "published"
         ? parsed.publishedAt ?? existing.publishedAt ?? new Date().toISOString()
         : null;
+    const persisted = resolveNewsInput(parsed, existing);
 
     try {
-      const result = await this.postRequest(parsed, id, publishedAt).query<NewsPostRow>(`
+      const result = await this.postRequest(persisted, id, publishedAt).query<NewsPostRow>(`
         UPDATE dbo.cms_news_posts
         SET slug = @slug,
           title = @title,
@@ -178,12 +196,16 @@ export class SqlServerCmsRepository implements CmsRepository {
           status = @status,
           published_at = @published_at,
           hero_image_url = @hero_image_url,
+          cta_label = @cta_label,
+          visual_variant = @visual_variant,
+          sort_order = @sort_order,
           author = @author,
           tags_json = @tags_json,
           body_json = @body_json,
           updated_at = SYSUTCDATETIME()
         OUTPUT INSERTED.id, INSERTED.slug, INSERTED.title, INSERTED.excerpt, INSERTED.status,
-          INSERTED.published_at, INSERTED.hero_image_url, INSERTED.author, INSERTED.tags_json,
+          INSERTED.published_at, INSERTED.hero_image_url, INSERTED.cta_label,
+          INSERTED.visual_variant, INSERTED.sort_order, INSERTED.author, INSERTED.tags_json,
           INSERTED.body_json, INSERTED.created_at, INSERTED.updated_at
         WHERE id = @id
       `);
@@ -196,7 +218,7 @@ export class SqlServerCmsRepository implements CmsRepository {
     }
   }
 
-  private postRequest(input: UpsertNewsPostInput, id: string, publishedAt: string | null) {
+  private postRequest(input: PersistedNewsPostInput, id: string, publishedAt: string | null) {
     return this.pool
       .request()
       .input("id", sql.UniqueIdentifier, id)
@@ -206,6 +228,9 @@ export class SqlServerCmsRepository implements CmsRepository {
       .input("status", sql.NVarChar(20), input.status)
       .input("published_at", sql.DateTime2, publishedAt ? new Date(publishedAt) : null)
       .input("hero_image_url", sql.NVarChar(1000), input.heroImageUrl ?? null)
+      .input("cta_label", sql.NVarChar(80), input.ctaLabel)
+      .input("visual_variant", sql.NVarChar(30), input.visualVariant)
+      .input("sort_order", sql.Int, input.sortOrder)
       .input("author", sql.NVarChar(120), input.author)
       .input("tags_json", sql.NVarChar(sql.MAX), JSON.stringify(input.tags))
       .input("body_json", sql.NVarChar(sql.MAX), JSON.stringify(input.body));
@@ -221,6 +246,9 @@ function mapNewsRow(row: NewsPostRow): NewsPost {
     status: row.status,
     publishedAt: row.published_at ? row.published_at.toISOString() : null,
     heroImageUrl: row.hero_image_url,
+    ctaLabel: row.cta_label,
+    visualVariant: row.visual_variant,
+    sortOrder: row.sort_order,
     author: row.author,
     tags: parseJsonArray(row.tags_json, []),
     body: RichTextDocumentSchema.parse(parseJsonArray(row.body_json, [])),
@@ -235,6 +263,8 @@ function mapRoadmapRow(row: RoadmapRow): RoadmapItem {
     title: row.title,
     description: row.description,
     status: row.status,
+    product: row.product,
+    year: row.roadmap_year,
     quarter: row.quarter,
     sortOrder: row.sort_order,
     updatedAt: row.updated_at.toISOString()
@@ -244,6 +274,18 @@ function mapRoadmapRow(row: RoadmapRow): RoadmapItem {
 function toNewsListItem(post: NewsPost): NewsListItem {
   const { body: _body, ...item } = post;
   return NewsListItemSchema.parse(item);
+}
+
+function resolveNewsInput(
+  input: UpsertNewsPostInput,
+  existing?: NewsPost
+): PersistedNewsPostInput {
+  return {
+    ...input,
+    ctaLabel: input.ctaLabel ?? existing?.ctaLabel ?? "Learn More →",
+    visualVariant: input.visualVariant ?? existing?.visualVariant ?? "feature",
+    sortOrder: input.sortOrder ?? existing?.sortOrder ?? 0
+  };
 }
 
 function parseJsonArray(value: string, fallback: unknown[]): unknown[] {

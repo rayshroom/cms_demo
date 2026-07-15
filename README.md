@@ -5,7 +5,7 @@ This repo contains three independently useful pieces:
 - `packages/cms-contract`: shared Zod schemas, TypeScript types, and API path helpers.
 - `apps/backend`: Express CMS API, Azure SQL / SQL Server compatible persistence, and a visual editor at `/admin`.
 - `apps/umbraco`: Umbraco backoffice bootstrap for the Azure SQL-first CMS route.
-- `apps/frontend`: plain Vite React SPA that consumes the CMS contract and renders CMS roadmap/news content inside normal product pages.
+- `apps/frontend`: Vite + React + TypeScript SPA rebuilt from the TDS Data Platform static reference. It uses CSS Modules and renders contract-backed roadmap/news sections through a swappable CMS provider.
 
 ## Run Locally
 
@@ -19,6 +19,30 @@ Default URLs:
 - Frontend: `http://127.0.0.1:5187`
 - CMS backend API: `http://localhost:8787/api`
 - CMS visual editor: `http://localhost:8787/admin`
+
+## Frontend CMS provider
+
+The frontend uses its in-browser mock provider by default, so it can run without the CMS backend:
+
+```sh
+npm run dev:frontend
+```
+
+To render the same shared contract from the Express CMS instead, create `apps/frontend/.env.local`:
+
+```sh
+VITE_CMS_PROVIDER=http
+VITE_CMS_API_BASE=http://localhost:8787/api
+```
+
+The public content endpoints are:
+
+- `GET /api/cms/site` — the combined homepage slice
+- `GET /api/cms/roadmap` — roadmap items
+- `GET /api/cms/news` — published news cards
+- `GET /api/cms/news/:slug` — a published news post
+
+Both mock and HTTP responses are validated with `packages/cms-contract` before components render.
 
 Default CMS admin login:
 

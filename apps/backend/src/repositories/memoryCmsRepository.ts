@@ -29,7 +29,9 @@ export class MemoryCmsRepository implements CmsRepository {
   }
 
   async listRoadmap(): Promise<RoadmapItem[]> {
-    return [...this.roadmap.values()].sort((a, b) => a.sortOrder - b.sortOrder);
+    return [...this.roadmap.values()].sort(
+      (a, b) => a.year - b.year || a.sortOrder - b.sortOrder
+    );
   }
 
   async createRoadmapItem(input: UpsertRoadmapItemInput): Promise<RoadmapItem> {
@@ -44,7 +46,7 @@ export class MemoryCmsRepository implements CmsRepository {
   }
 
   async listPublishedNews(): Promise<NewsListItem[]> {
-    return this.sortedPosts()
+    return this.sortedPublishedPosts()
       .filter((post) => post.status === "published")
       .map(toNewsListItem);
   }
@@ -90,6 +92,9 @@ export class MemoryCmsRepository implements CmsRepository {
     const post = NewsPostSchema.parse({
       ...existing,
       ...parsed,
+      ctaLabel: parsed.ctaLabel ?? existing.ctaLabel,
+      visualVariant: parsed.visualVariant ?? existing.visualVariant,
+      sortOrder: parsed.sortOrder ?? existing.sortOrder,
       publishedAt:
         parsed.status === "published" ? parsed.publishedAt ?? existing.publishedAt ?? now : null,
       heroImageUrl: parsed.heroImageUrl ?? null,
@@ -101,6 +106,17 @@ export class MemoryCmsRepository implements CmsRepository {
 
   private sortedPosts(): NewsPost[] {
     return [...this.posts.values()].sort((a, b) => {
+      const bDate = b.publishedAt ?? b.updatedAt;
+      const aDate = a.publishedAt ?? a.updatedAt;
+      return bDate.localeCompare(aDate);
+    });
+  }
+
+  private sortedPublishedPosts(): NewsPost[] {
+    return [...this.posts.values()].sort((a, b) => {
+      if (a.sortOrder !== b.sortOrder) {
+        return a.sortOrder - b.sortOrder;
+      }
       const bDate = b.publishedAt ?? b.updatedAt;
       const aDate = a.publishedAt ?? a.updatedAt;
       return bDate.localeCompare(aDate);

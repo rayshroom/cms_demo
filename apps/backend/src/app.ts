@@ -4,6 +4,7 @@ import express, { type NextFunction, type Request, type Response } from "express
 import { ZodError, type ZodTypeAny } from "zod";
 import {
   CmsSiteSliceSchema,
+  NewsListResponseSchema,
   RoadmapResponseSchema,
   UpsertNewsPostInputSchema,
   UpsertRoadmapItemInputSchema
@@ -47,14 +48,21 @@ export function createApp(repository: CmsRepository, adminAuthConfig: AdminAuthC
         repository.listRoadmap(),
         repository.listPublishedNews()
       ]);
-      response.json(CmsSiteSliceSchema.parse({ roadmap, featuredNews: featuredNews.slice(0, 3) }));
+      response.json(CmsSiteSliceSchema.parse({ roadmap, featuredNews: featuredNews.slice(0, 4) }));
+    })
+  );
+
+  app.get(
+    "/api/cms/roadmap",
+    asyncRoute(async (_request, response) => {
+      response.json(RoadmapResponseSchema.parse(await repository.listRoadmap()));
     })
   );
 
   app.get(
     "/api/cms/news",
     asyncRoute(async (_request, response) => {
-      response.json(await repository.listPublishedNews());
+      response.json(NewsListResponseSchema.parse(await repository.listPublishedNews()));
     })
   );
 

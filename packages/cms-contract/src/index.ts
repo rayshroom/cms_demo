@@ -34,6 +34,23 @@ export const RichTextDocumentSchema = z.array(CmsBlockSchema).min(1);
 
 export const NewsStatusSchema = z.enum(["draft", "published"]);
 export const RoadmapStatusSchema = z.enum(["planned", "in_progress", "launched"]);
+export const NewsVisualVariantSchema = z.enum([
+  "feature",
+  "training",
+  "release",
+  "maintenance",
+  "image"
+]);
+export const RoadmapProductSchema = z.enum(["Platform", "Databricks", "Dremio", "Data Lab"]);
+export const RoadmapQuarterSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") {
+      return value;
+    }
+    return value.match(/^Q([1-4])/i)?.[0].toUpperCase() ?? value;
+  },
+  z.enum(["Q1", "Q2", "Q3", "Q4"])
+);
 
 export const NewsPostSchema = z.object({
   id: z.string().uuid(),
@@ -43,6 +60,9 @@ export const NewsPostSchema = z.object({
   status: NewsStatusSchema,
   publishedAt: z.string().datetime().nullable(),
   heroImageUrl: z.string().url().nullable(),
+  ctaLabel: z.string().min(1).max(80).default("Learn More →"),
+  visualVariant: NewsVisualVariantSchema.default("feature"),
+  sortOrder: z.number().int().nonnegative().default(0),
   author: z.string().min(1).max(120),
   tags: z.array(z.string().min(1).max(40)),
   body: RichTextDocumentSchema,
@@ -59,7 +79,9 @@ export const RoadmapItemSchema = z.object({
   title: z.string().min(1).max(160),
   description: z.string().min(1).max(600),
   status: RoadmapStatusSchema,
-  quarter: z.string().min(2).max(24),
+  product: RoadmapProductSchema.default("Platform"),
+  year: z.number().int().min(2000).max(2100).default(2026),
+  quarter: RoadmapQuarterSchema,
   sortOrder: z.number().int().nonnegative(),
   updatedAt: z.string().datetime()
 });
@@ -76,6 +98,9 @@ export const UpsertNewsPostInputSchema = z.object({
   status: NewsStatusSchema.default("draft"),
   publishedAt: z.string().datetime().nullable().optional(),
   heroImageUrl: z.string().url().nullable().optional(),
+  ctaLabel: z.string().min(1).max(80).optional(),
+  visualVariant: NewsVisualVariantSchema.optional(),
+  sortOrder: z.number().int().nonnegative().optional(),
   author: z.string().min(1).max(120).default("Editorial"),
   tags: z.array(z.string().min(1).max(40)).max(12).default([]),
   body: RichTextDocumentSchema
@@ -85,7 +110,9 @@ export const UpsertRoadmapItemInputSchema = z.object({
   title: z.string().min(1).max(160),
   description: z.string().min(1).max(600),
   status: RoadmapStatusSchema,
-  quarter: z.string().min(2).max(24),
+  product: RoadmapProductSchema.default("Platform"),
+  year: z.number().int().min(2000).max(2100).default(2026),
+  quarter: RoadmapQuarterSchema,
   sortOrder: z.number().int().nonnegative()
 });
 
@@ -95,6 +122,7 @@ export const RoadmapResponseSchema = z.array(RoadmapItemSchema);
 
 export const cmsApiPaths = {
   site: "/api/cms/site",
+  roadmap: "/api/cms/roadmap",
   news: "/api/cms/news",
   newsPost: (slug: string) => `/api/cms/news/${encodeURIComponent(slug)}`,
   adminPosts: "/api/admin/posts",
@@ -106,6 +134,9 @@ export type CmsBlock = z.infer<typeof CmsBlockSchema>;
 export type RichTextDocument = z.infer<typeof RichTextDocumentSchema>;
 export type NewsStatus = z.infer<typeof NewsStatusSchema>;
 export type RoadmapStatus = z.infer<typeof RoadmapStatusSchema>;
+export type NewsVisualVariant = z.infer<typeof NewsVisualVariantSchema>;
+export type RoadmapProduct = z.infer<typeof RoadmapProductSchema>;
+export type RoadmapQuarter = z.infer<typeof RoadmapQuarterSchema>;
 export type NewsPost = z.infer<typeof NewsPostSchema>;
 export type NewsListItem = z.infer<typeof NewsListItemSchema>;
 export type RoadmapItem = z.infer<typeof RoadmapItemSchema>;
