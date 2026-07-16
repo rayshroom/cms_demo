@@ -1,22 +1,20 @@
+import type { Messages } from "../i18n/catalog";
+import { useI18n } from "../i18n/useI18n";
 import styles from "../styles/TdsPage.module.css";
 
-const metrics = [
-  { label: "Datasets", value: "48M+", trend: "↑ 23% vs last month", green: true },
-  { label: "Active Users", value: "12K", trend: "↑ 18% vs last month" },
-  { label: "Ingestion Vol.", value: "5 TB/day", trend: "↑ 32% vs last month", green: true },
-  { label: "Avg Ingest Time", value: "1.68 TB", trend: "Peak at 4:15 PM", quiet: true }
+const metricStyles: ReadonlyArray<{ green?: boolean; quiet?: boolean }> = [
+  { green: true },
+  {},
+  { green: true },
+  { quiet: true }
 ];
 
-const services = [
-  "Azure Data Factory",
-  "Databricks",
-  "Data Storage",
-  "Confluent Kafka",
-  "Data Portal",
-  "Supporting Services"
-];
+type DashboardMessages = Messages["hero"]["dashboard"];
 
 export function HeroSection() {
+  const { messages } = useI18n();
+  const copy = messages.hero;
+
   return (
     <section className={styles.hero}>
       <div className={`${styles.heroGlow} ${styles.heroGlowOne}`} />
@@ -26,45 +24,42 @@ export function HeroSection() {
           <div className={styles.heroCopy}>
             <div className={styles.heroBadge}>
               <span className={styles.heroBadgeDot} />
-              Enterprise Data &amp; AI Platform
+              {copy.badge}
             </div>
             <h1 className={styles.heroTitle}>
-              Accelerate trusted
+              {copy.titleBefore}
               <br />
-              <span className={styles.heroHighlight}>enterprise data</span>
+              <span className={styles.heroHighlight}>{copy.titleHighlight}</span>
               <br />
-              and AI workflows
+              {copy.titleAfter}
             </h1>
-            <p className={styles.heroDescription}>
-              Discover governed datasets, AI-ready analytics, onboarding tools, and enterprise
-              platform services from a unified ecosystem designed for scale.
-            </p>
+            <p className={styles.heroDescription}>{copy.description}</p>
             <div className={styles.heroActions}>
               <a className={styles.primaryButton} href="#section-platform">
-                Get Started <ArrowIcon />
+                {copy.getStarted} <ArrowIcon />
               </a>
               <a className={styles.secondaryButton} href="#section-solutions">
-                <PlayIcon /> Watch Demo
+                <PlayIcon /> {copy.watchDemo}
               </a>
             </div>
           </div>
 
-          <div className={styles.heroVisual} aria-label="Platform overview dashboard">
+          <div className={styles.heroVisual} aria-label={copy.dashboard.ariaLabel}>
             <div className={styles.dashboard}>
               <div className={styles.metricGrid}>
-                {metrics.map((metric) => (
+                {copy.dashboard.metrics.map((metric, index) => (
                   <div className={styles.dashboardMetric} key={metric.label}>
                     <div className={styles.metricLabel}>
                       {metric.label}
                       <MetricGlyph />
                     </div>
                     <div
-                      className={`${styles.metricValue} ${metric.green ? styles.metricValueGreen : ""}`}
+                      className={`${styles.metricValue} ${metricStyles[index].green ? styles.metricValueGreen : ""}`}
                     >
                       {metric.value}
                     </div>
-                    <div className={metric.quiet ? styles.metricSub : styles.metricTrend}>
-                      {metric.trend}
+                    <div className={metricStyles[index].quiet ? styles.metricSub : styles.metricTrend}>
+                      {metric.detail}
                     </div>
                   </div>
                 ))}
@@ -73,37 +68,38 @@ export function HeroSection() {
               <div className={styles.chartGrid}>
                 <div className={styles.chartCard}>
                   <div className={styles.chartTitle}>
-                    Ingestion Volume <span className={styles.chartRange}>Last 7 days ▾</span>
+                    {copy.dashboard.ingestionTitle}{" "}
+                    <span className={styles.chartRange}>{copy.dashboard.ingestionRange}</span>
                   </div>
-                  <VolumeChart />
+                  <VolumeChart copy={copy.dashboard} />
                   <div className={styles.chartLegend}>
-                    <Legend color="#27D17F" label="Batch" />
-                    <Legend color="#06B6D4" label="Streaming" />
-                    <Legend color="#3B82F6" label="Manual" />
+                    <Legend color="#27D17F" label={copy.dashboard.batch} />
+                    <Legend color="#06B6D4" label={copy.dashboard.streaming} />
+                    <Legend color="#3B82F6" label={copy.dashboard.manual} />
                   </div>
                 </div>
                 <div className={styles.chartCard}>
-                  <div className={styles.chartTitle}>Dataset Health</div>
+                  <div className={styles.chartTitle}>{copy.dashboard.healthTitle}</div>
                   <div className={styles.donutWrap}>
-                    <HealthDonut />
+                    <HealthDonut copy={copy.dashboard} />
                     <div className={styles.donutLegend}>
-                      <HealthRow color="#27D17F" label="Healthy" value="92%" />
-                      <HealthRow color="#F59E0B" label="Warning" value="6%" />
-                      <HealthRow color="#EF4444" label="Critical" value="2%" />
+                      <HealthRow color="#27D17F" label={copy.dashboard.healthy} value="92%" />
+                      <HealthRow color="#F59E0B" label={copy.dashboard.warning} value="6%" />
+                      <HealthRow color="#EF4444" label={copy.dashboard.critical} value="2%" />
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className={styles.operations}>
-                <div className={styles.operationsTitle}>Operational Status</div>
+                <div className={styles.operationsTitle}>{copy.dashboard.operationsTitle}</div>
                 <div className={styles.operationsGrid}>
-                  {services.map((service) => (
+                  {copy.dashboard.services.map((service) => (
                     <div className={styles.operationItem} key={service}>
                       <span className={styles.operationCheck}>✓</span>
                       <div>
                         <div className={styles.operationName}>{service}</div>
-                        <div className={styles.operationState}>Operational</div>
+                        <div className={styles.operationState}>{copy.dashboard.operational}</div>
                       </div>
                     </div>
                   ))}
@@ -136,9 +132,9 @@ function HealthRow({ color, label, value }: { color: string; label: string; valu
   );
 }
 
-function VolumeChart() {
+function VolumeChart({ copy }: { copy: DashboardMessages }) {
   return (
-    <svg viewBox="0 0 280 80" width="100%" role="img" aria-label="Seven day ingestion chart">
+    <svg viewBox="0 0 280 80" width="100%" role="img" aria-label={copy.ingestionAriaLabel}>
       {[20, 40, 60].map((y) => (
         <line key={y} x1="0" y1={y} x2="280" y2={y} stroke="rgba(255,255,255,.04)" />
       ))}
@@ -166,16 +162,8 @@ function VolumeChart() {
       {[0, 40, 80, 120, 160, 200, 240, 280].map((x, index) => (
         <circle key={x} cx={x} cy={[52, 44, 36, 38, 28, 30, 20, 16][index]} r="2.5" fill="#27D17F" />
       ))}
-      {[
-        [0, "15 Jun"],
-        [40, "16 Jun"],
-        [80, "17 Jun"],
-        [120, "18 Jun"],
-        [160, "19 Jun"],
-        [200, "20 Jun"],
-        [240, "21 Jun"]
-      ].map(([x, label]) => (
-        <text key={label} x={x} y="80" fill="#475569" fontSize="7" textAnchor="middle">
+      {copy.ingestionDates.map((label, index) => (
+        <text key={label} x={index * 40} y="80" fill="#475569" fontSize="7" textAnchor="middle">
           {label}
         </text>
       ))}
@@ -183,9 +171,9 @@ function VolumeChart() {
   );
 }
 
-function HealthDonut() {
+function HealthDonut({ copy }: { copy: DashboardMessages }) {
   return (
-    <svg viewBox="0 0 80 80" width="80" height="80" role="img" aria-label="92 percent healthy">
+    <svg viewBox="0 0 80 80" width="80" height="80" role="img" aria-label={copy.healthAriaLabel}>
       <circle cx="40" cy="40" r="28" fill="none" stroke="rgba(255,255,255,.06)" strokeWidth="10" />
       <circle
         cx="40"
@@ -199,7 +187,7 @@ function HealthDonut() {
         transform="rotate(-90 40 40)"
       />
       <text x="40" y="38" fill="#fff" fontSize="12" fontWeight="800" textAnchor="middle">92%</text>
-      <text x="40" y="50" fill="#64748B" fontSize="7" textAnchor="middle">Healthy</text>
+      <text x="40" y="50" fill="#64748B" fontSize="7" textAnchor="middle">{copy.healthy}</text>
     </svg>
   );
 }

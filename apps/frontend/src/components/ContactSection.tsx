@@ -1,40 +1,41 @@
+import type { Messages } from "../i18n/catalog";
+import { useI18n } from "../i18n/useI18n";
 import styles from "../styles/TdsPage.module.css";
 
+type ContactMessages = Messages["contact"];
+
 export function ContactSection() {
+  const { messages } = useI18n();
+  const copy = messages.contact;
+
   return (
     <section className={styles.contactSection} id="section-contact">
       <div className={styles.container}>
         <header className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Contact</h2>
-          <p className={styles.sectionDescription}>
-            Connect with the support team, browse help resources, or reach out directly for
-            assistance and onboarding guidance.
-          </p>
+          <h2 className={styles.sectionTitle}>{copy.title}</h2>
+          <p className={styles.sectionDescription}>{copy.description}</p>
         </header>
 
         <div className={styles.contactGrid}>
           <ContactCard
-            visual={<TeamsArtwork />}
-            title="Microsoft Teams"
-            description="Chat live with the platform support team directly via your enterprise Teams workspace."
-            action="Open Teams Chat →"
+            visual={<TeamsArtwork copy={copy} />}
+            title={copy.teams.title}
+            description={copy.teams.description}
+            action={copy.teams.action}
           />
           <ContactCard
-            visual={<KnowledgeArtwork />}
-            title="FAQ & Knowledge Base"
-            description="Find answers, how-tos, and onboarding guides in our self-service knowledge hub."
-            action="Browse FAQ →"
+            visual={<KnowledgeArtwork copy={copy} />}
+            title={copy.knowledge.title}
+            description={copy.knowledge.description}
+            action={copy.knowledge.action}
           />
           <article className={styles.contactCard}>
             <div className={styles.contactVisual}>
-              <EmailArtwork />
+              <EmailArtwork copy={copy} />
             </div>
             <div className={styles.contactBody}>
-              <div className={styles.contactTitle}>Email &amp; Phone</div>
-              <p className={styles.contactDescription}>
-                Reach our support desk directly for escalated issues, bug reports, or governance
-                inquiries.
-              </p>
+              <div className={styles.contactTitle}>{copy.email.title}</div>
+              <p className={styles.contactDescription}>{copy.email.description}</p>
               <a className={styles.contactDetail} href="mailto:support@tds.enterprise">
                 support@tds.enterprise
               </a>
@@ -74,9 +75,9 @@ function ContactCard({
   );
 }
 
-function TeamsArtwork() {
+function TeamsArtwork({ copy }: { copy: ContactMessages }) {
   return (
-    <svg viewBox="0 0 420 180" role="img" aria-label="Microsoft Teams support illustration">
+    <svg viewBox="0 0 420 180" role="img" aria-label={copy.teams.artworkAriaLabel}>
       <defs>
         <linearGradient id="teams-gradient" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#1A3BAA" />
@@ -96,14 +97,16 @@ function TeamsArtwork() {
       <text x="34" y="78" fill="white" fontSize="9" fontWeight="700" textAnchor="middle">TS</text>
       <circle cx="386" cy="108" r="12" fill="#4F46E5" />
       <text x="386" y="112" fill="white" fontSize="9" fontWeight="700" textAnchor="middle">RS</text>
-      <text x="210" y="168" fill="rgba(255,255,255,.4)" fontSize="9" letterSpacing="1.5" textAnchor="middle">MICROSOFT TEAMS</text>
+      <text x="210" y="168" fill="rgba(255,255,255,.4)" fontSize="9" letterSpacing="1.5" textAnchor="middle">
+        {copy.teams.artworkLabel}
+      </text>
     </svg>
   );
 }
 
-function KnowledgeArtwork() {
+function KnowledgeArtwork({ copy }: { copy: ContactMessages }) {
   return (
-    <svg viewBox="0 0 420 180" role="img" aria-label="Knowledge base illustration">
+    <svg viewBox="0 0 420 180" role="img" aria-label={copy.knowledge.artworkAriaLabel}>
       <defs>
         <linearGradient id="knowledge-gradient" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#065F46" />
@@ -125,14 +128,16 @@ function KnowledgeArtwork() {
       <line x1="268" y1="116" x2="278" y2="126" stroke="rgba(255,255,255,.7)" strokeLinecap="round" strokeWidth="2.5" />
       <circle cx="148" cy="28" r="18" fill="#27D17F" />
       <text x="148" y="34" fill="#0B3D2E" fontSize="16" fontWeight="900" textAnchor="middle">?</text>
-      <text x="210" y="168" fill="rgba(255,255,255,.35)" fontSize="9" letterSpacing="1.5" textAnchor="middle">KNOWLEDGE BASE</text>
+      <text x="210" y="168" fill="rgba(255,255,255,.35)" fontSize="9" letterSpacing="1.5" textAnchor="middle">
+        {copy.knowledge.artworkLabel}
+      </text>
     </svg>
   );
 }
 
-function EmailArtwork() {
+function EmailArtwork({ copy }: { copy: ContactMessages }) {
   return (
-    <svg viewBox="0 0 420 180" role="img" aria-label="Email and phone support illustration">
+    <svg viewBox="0 0 420 180" role="img" aria-label={copy.email.artworkAriaLabel}>
       <defs>
         <linearGradient id="email-gradient" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#581C87" />
@@ -149,7 +154,9 @@ function EmailArtwork() {
       <circle cx="306" cy="132" r="5" fill="rgba(255,255,255,.4)" />
       <circle cx="252" cy="42" r="10" fill="#EF4444" />
       <text x="252" y="47" fill="white" fontSize="9" fontWeight="700" textAnchor="middle">1</text>
-      <text x="210" y="168" fill="rgba(255,255,255,.35)" fontSize="9" letterSpacing="1.5" textAnchor="middle">EMAIL &amp; PHONE</text>
+      <text x="210" y="168" fill="rgba(255,255,255,.35)" fontSize="9" letterSpacing="1.5" textAnchor="middle">
+        {copy.email.artworkLabel}
+      </text>
     </svg>
   );
 }

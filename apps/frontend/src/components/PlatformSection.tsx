@@ -1,99 +1,72 @@
+import { useI18n } from "../i18n/useI18n";
 import styles from "../styles/TdsPage.module.css";
 
-const stats = [
-  ["12,000+", "Active Platform Users"],
-  ["48M+", "Governed Datasets Monthly"],
-  ["65%", "Faster Onboarding vs Legacy"],
-  ["4,500+", "Hours Saved via Automation"],
-  ["99.95%", "Platform Uptime (Last 90 Days)"]
-] as const;
-
-const capabilities = [
-  {
-    title: "Unified Data Governance",
-    description:
-      "Define and enforce access policies, track data lineage from source to insight, and ensure compliance across the entire platform — all from a single control plane.",
-    tags: ["Lineage", "Access Control", "Unity Catalog", "Audit"],
-    action: "Manage Governance →",
-    status: "Live",
-    tone: "blue" as const,
-    icon: "shield" as const
-  },
-  {
-    title: "Self-Service Analytics",
-    description:
-      "Empower business teams to query and explore governed datasets without waiting on engineering. Connect your BI tool directly to the semantic layer for always-fresh insights.",
-    tags: ["No-Code", "BI Connect", "Semantic Layer", "Dremio"],
-    action: "Explore Datasets →",
-    status: "Live",
-    tone: "purple" as const,
-    icon: "chart" as const
-  },
-  {
-    title: "AI-Ready Data Pipelines",
-    description:
-      "Accelerate model development with pre-governed feature stores, automated data quality checks, and MLflow experiment tracking — fully integrated into the enterprise lakehouse.",
-    tags: ["MLflow", "Feature Store", "AutoML", "Delta Live"],
-    action: "Start Building →",
-    status: "Beta",
-    tone: "green" as const,
-    icon: "spark" as const
-  }
+const capabilityPresentation: ReadonlyArray<{
+  tone: "blue" | "purple" | "green";
+  icon: "shield" | "chart" | "spark";
+}> = [
+  { tone: "blue", icon: "shield" },
+  { tone: "purple", icon: "chart" },
+  { tone: "green", icon: "spark" }
 ];
 
 export function PlatformSection() {
+  const { messages } = useI18n();
+  const copy = messages.platform;
+
   return (
     <section className={styles.platformSection} id="section-platform">
       <div className={styles.container}>
         <header className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Platform</h2>
-          <p className={styles.sectionDescription}>
-            Access enterprise-grade data, AI, and analytics capabilities through a centralized and
-            governed platform experience.
-          </p>
+          <h2 className={styles.sectionTitle}>{copy.title}</h2>
+          <p className={styles.sectionDescription}>{copy.description}</p>
         </header>
 
         <div className={styles.statsGrid}>
-          {stats.map(([value, label]) => (
-            <div className={styles.statItem} key={label}>
-              <div className={styles.statValue}>{value}</div>
-              <div className={styles.statLabel}>{label}</div>
+          {copy.stats.map((stat) => (
+            <div className={styles.statItem} key={stat.label}>
+              <div className={styles.statValue}>{stat.value}</div>
+              <div className={styles.statLabel}>{stat.label}</div>
             </div>
           ))}
         </div>
 
         <div className={styles.capabilityGrid}>
-          {capabilities.map((capability) => (
-            <article
-              className={`${styles.capabilityCard} ${
-                capability.tone === "purple"
-                  ? styles.capabilityPurple
-                  : capability.tone === "green"
-                    ? styles.capabilityGreen
-                    : ""
-              }`}
-              key={capability.title}
-            >
-              <div className={styles.capabilityHeader}>
-                <div className={styles.capabilityIcon}>
-                  <CapabilityIcon type={capability.icon} />
+          {copy.capabilities.map((capability, index) => {
+            const presentation = capabilityPresentation[index];
+
+            return (
+              <article
+                className={`${styles.capabilityCard} ${
+                  presentation.tone === "purple"
+                    ? styles.capabilityPurple
+                    : presentation.tone === "green"
+                      ? styles.capabilityGreen
+                      : ""
+                }`}
+                key={capability.title}
+              >
+                <div className={styles.capabilityHeader}>
+                  <div className={styles.capabilityIcon}>
+                    <CapabilityIcon type={presentation.icon} />
+                  </div>
+                  <span className={styles.capabilityStatus}>{capability.status}</span>
                 </div>
-                <span className={styles.capabilityStatus}>{capability.status}</span>
-              </div>
-              <div className={styles.capabilityName}>{capability.title}</div>
-              <p className={styles.capabilityDescription}>{capability.description}</p>
-              <div className={styles.tagRow}>
-                {capability.tags.map((tag) => (
-                  <span className={styles.lightTag} key={tag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <a className={styles.capabilityLink} href="#section-solutions">
-                {capability.action}
-              </a>
-            </article>
-          ))}
+                <div className={styles.capabilityName}>{capability.title}</div>
+                <p className={styles.capabilityDescription}>{capability.description}</p>
+                <div className={styles.tagRow}>
+                  {capability.tags.map((tag) => (
+                    <span className={styles.lightTag} key={tag}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <a className={styles.capabilityLink} href="#section-solutions">
+                  {capability.action}
+                </a>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>

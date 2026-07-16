@@ -1,54 +1,102 @@
+import type { Messages } from "../i18n/catalog";
+import { useI18n } from "../i18n/useI18n";
 import styles from "../styles/TdsPage.module.css";
 
+type SitemapLabel = keyof Messages["footer"]["sitemap"];
+
 const sitemap = [
-  ["Products", "Databricks", "Data Labs", "Dremio", "AI Services", "Platform Status"],
-  [
-    "Workspaces",
-    "My Workspaces",
-    "Join a Workspace",
-    "Create Workspace",
-    "Workspace Management",
-    "Landing Zone (ADLS)",
-    "Deployment Services"
-  ],
-  [
-    "Resources",
-    "Training & Learning Paths",
-    "Documentation",
-    "Architecture Guides",
-    "Demos & Walkthroughs",
-    "Governance Playbooks",
-    "FAQs"
-  ],
-  ["Support", "Feature Requests", "MS Teams Support", "Bug Reports", "Service Desk", "Contact Support", "Known Issues"],
-  ["Developers", "Design System v1.1", "APIs & SDKs", "CI/CD Integrations", "Deployment Pipelines", "Developer Docs", "Data Labs Access"],
-  ["Platform", "Home", "Roadmap", "News & Updates", "Release Notes", "Accessibility", "Privacy & Terms"]
-] as const;
+  {
+    title: "products",
+    links: [
+      { label: "productDatabricks", href: "#top" },
+      { label: "productDataLabs", href: "#top" },
+      { label: "productDremio", href: "#top" },
+      { label: "productAiServices", href: "#top" },
+      { label: "productPlatformStatus", href: "#top" }
+    ]
+  },
+  {
+    title: "workspaces",
+    links: [
+      { label: "workspaceMine", href: "#top" },
+      { label: "workspaceJoin", href: "#top" },
+      { label: "workspaceCreate", href: "#top" },
+      { label: "workspaceManagement", href: "#top" },
+      { label: "workspaceLandingZone", href: "#top" },
+      { label: "workspaceDeployment", href: "#top" }
+    ]
+  },
+  {
+    title: "resources",
+    links: [
+      { label: "resourceTraining", href: "#top" },
+      { label: "resourceDocumentation", href: "#top" },
+      { label: "resourceArchitecture", href: "#top" },
+      { label: "resourceDemos", href: "#top" },
+      { label: "resourceGovernance", href: "#top" },
+      { label: "resourceFaqs", href: "#section-contact" }
+    ]
+  },
+  {
+    title: "support",
+    links: [
+      { label: "supportFeatures", href: "#top" },
+      { label: "supportTeams", href: "#section-contact" },
+      { label: "supportBugs", href: "#top" },
+      { label: "supportDesk", href: "#top" },
+      { label: "supportContact", href: "#section-contact" },
+      { label: "supportIssues", href: "#top" }
+    ]
+  },
+  {
+    title: "developers",
+    links: [
+      { label: "developerDesign", href: "#top" },
+      { label: "developerApis", href: "#top" },
+      { label: "developerCicd", href: "#top" },
+      { label: "developerPipelines", href: "#top" },
+      { label: "developerDocs", href: "#top" },
+      { label: "developerLabs", href: "#top" }
+    ]
+  },
+  {
+    title: "platform",
+    links: [
+      { label: "platformHome", href: "#top" },
+      { label: "platformRoadmap", href: "#section-roadmap" },
+      { label: "platformNews", href: "#section-updates" },
+      { label: "platformReleases", href: "#top" },
+      { label: "platformAccessibility", href: "#accessibility" },
+      { label: "platformPrivacy", href: "#privacy" }
+    ]
+  }
+] as const satisfies ReadonlyArray<{
+  title: SitemapLabel;
+  links: ReadonlyArray<{ label: SitemapLabel; href: string }>;
+}>;
 
 export function SiteFooter() {
+  const { messages } = useI18n();
+  const copy = messages.footer;
+
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
         <div className={styles.sitemapIntro}>
-          <h2 className={styles.sitemapTitle}>Site Map</h2>
-          <p className={styles.sitemapDescription}>
-            Browse all platform pages, products, tools, and resources through a structured
-            navigation overview.
-          </p>
+          <h2 className={styles.sitemapTitle}>{copy.sitemapTitle}</h2>
+          <p className={styles.sitemapDescription}>{copy.sitemapDescription}</p>
         </div>
 
         <div className={styles.footerTop}>
           <div className={styles.footerBrand}>
-            <a className={styles.footerLogo} href="#top" aria-label="TDS Data Platform home">
+            <a className={styles.footerLogo} href="#top" aria-label={copy.homeAriaLabel}>
               <span className={styles.footerLogoMark}>T</span>
               <span className={styles.footerLogoName}>
-                TDS <span>Data Platform</span>
+                TDS <span>{copy.brandSuffix}</span>
               </span>
             </a>
-            <p className={styles.footerTagline}>
-              Enterprise data &amp; AI workflows from a unified ecosystem designed for scale.
-            </p>
-            <div className={styles.socialRow} aria-label="Social channels">
+            <p className={styles.footerTagline}>{copy.tagline}</p>
+            <div className={styles.socialRow} aria-label={copy.socialAriaLabel}>
               <button className={styles.socialButton} type="button" aria-label="GitHub">
                 <GithubIcon />
               </button>
@@ -62,12 +110,12 @@ export function SiteFooter() {
           </div>
 
           <div className={styles.sitemapGrid}>
-            {sitemap.map(([title, ...links]) => (
-              <div key={title}>
-                <div className={styles.sitemapColumnTitle}>{title}</div>
-                {links.map((link) => (
-                  <a className={styles.sitemapLink} href={hrefFor(link)} key={link}>
-                    {link}
+            {sitemap.map((column) => (
+              <div key={column.title}>
+                <div className={styles.sitemapColumnTitle}>{copy.sitemap[column.title]}</div>
+                {column.links.map((link) => (
+                  <a className={styles.sitemapLink} href={link.href} key={link.label}>
+                    {copy.sitemap[link.label]}
                   </a>
                 ))}
               </div>
@@ -77,28 +125,19 @@ export function SiteFooter() {
 
         <div className={styles.footerBottom}>
           <p className={styles.footerCopy}>
-            © 2026 <strong>TDS Data Platform</strong>. All rights reserved.
-            <span className={styles.version}>v0.37.2 · July 14, 2026 · 12:52 PM EST</span>
+            © 2026 <strong>TDS Data Platform</strong>. {copy.allRightsReserved}
+            <span className={styles.version}>{copy.version}</span>
           </p>
           <div className={styles.footerLinks}>
-            <a href="#privacy">Privacy Policy</a>
-            <a href="#terms">Terms of Service</a>
-            <a href="#accessibility">Accessibility</a>
-            <a href="#cookies">Cookie Settings</a>
+            <a href="#privacy">{copy.privacyPolicy}</a>
+            <a href="#terms">{copy.termsOfService}</a>
+            <a href="#accessibility">{copy.accessibility}</a>
+            <a href="#cookies">{copy.cookieSettings}</a>
           </div>
         </div>
       </div>
     </footer>
   );
-}
-
-function hrefFor(label: string) {
-  if (label === "Roadmap") return "#section-roadmap";
-  if (label === "News & Updates") return "#section-updates";
-  if (label === "MS Teams Support" || label === "Contact Support" || label === "FAQs") {
-    return "#section-contact";
-  }
-  return "#top";
 }
 
 function GithubIcon() {

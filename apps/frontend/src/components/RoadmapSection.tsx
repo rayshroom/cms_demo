@@ -2,26 +2,23 @@ import { useMemo, useState } from "react";
 import type {
   RoadmapItem,
   RoadmapProduct,
-  RoadmapQuarter,
   RoadmapStatus
 } from "@cms-demo/cms-contract/roadmap";
 import type { RoadmapContentState } from "../cms/roadmap/useRoadmapContent";
+import type { Messages } from "../i18n/catalog";
+import { useI18n } from "../i18n/useI18n";
 import styles from "../styles/TdsPage.module.css";
 
 type ViewMode = "board" | "gantt";
 type StatusFilter = "all" | RoadmapStatus;
 type ProductFilter = "all" | RoadmapProduct;
 
-const quarterLabels: Record<RoadmapQuarter, string> = {
-  Q1: "Q1 · Jan – Mar",
-  Q2: "Q2 · Apr – Jun",
-  Q3: "Q3 · Jul – Sep",
-  Q4: "Q4 · Oct – Dec"
-};
-
 const quarters = ["Q1", "Q2", "Q3", "Q4"] as const;
+type RoadmapMessages = Messages["roadmap"];
 
 export function RoadmapSection({ state }: { state: RoadmapContentState }) {
+  const { locale, messages } = useI18n();
+  const copy = messages.roadmap;
   const [query, setQuery] = useState("");
   const [product, setProduct] = useState<ProductFilter>("all");
   const [status, setStatus] = useState<StatusFilter>("all");
@@ -29,61 +26,58 @@ export function RoadmapSection({ state }: { state: RoadmapContentState }) {
 
   const filteredItems = useMemo(() => {
     if (state.status !== "ready") return [];
-    const normalizedQuery = query.trim().toLocaleLowerCase();
+    const normalizedQuery = query.trim().toLocaleLowerCase(locale);
 
     return state.data.filter(
       (item) =>
         (product === "all" || item.product === product) &&
         (status === "all" || item.status === status) &&
-        (!normalizedQuery || item.title.toLocaleLowerCase().includes(normalizedQuery))
+        (!normalizedQuery || item.title.toLocaleLowerCase(locale).includes(normalizedQuery))
     );
-  }, [product, query, state, status]);
+  }, [locale, product, query, state, status]);
 
   return (
     <section className={styles.roadmapSection} id="section-roadmap">
       <div className={styles.container}>
         <header className={styles.sectionHeader}>
-          <h2 className={styles.sectionTitle}>Roadmap</h2>
-          <p className={styles.sectionDescription}>
-            Track platform improvements, product releases, and upcoming capabilities across the TDS
-            ecosystem.
-          </p>
+          <h2 className={styles.sectionTitle}>{copy.title}</h2>
+          <p className={styles.sectionDescription}>{copy.description}</p>
         </header>
 
-        <div className={styles.roadmapToolbar} aria-label="Roadmap controls">
+        <div className={styles.roadmapToolbar} aria-label={copy.controlsLabel}>
           <label className={styles.searchControl}>
             <SearchIcon />
-            <span hidden>Search roadmap</span>
+            <span hidden>{copy.searchLabel}</span>
             <input
               className={styles.searchInput}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search roadmap…"
+              placeholder={copy.searchPlaceholder}
               type="search"
               value={query}
             />
           </label>
           <select
-            aria-label="Filter by product"
+            aria-label={copy.productFilterLabel}
             className={styles.filterSelect}
             onChange={(event) => setProduct(event.target.value as ProductFilter)}
             value={product}
           >
-            <option value="all">All products</option>
-            <option value="Platform">Platform</option>
-            <option value="Databricks">Databricks</option>
-            <option value="Dremio">Dremio</option>
-            <option value="Data Lab">Data Lab</option>
+            <option value="all">{copy.products.all}</option>
+            <option value="Platform">{copy.products.platform}</option>
+            <option value="Databricks">{copy.products.databricks}</option>
+            <option value="Dremio">{copy.products.dremio}</option>
+            <option value="Data Lab">{copy.products.dataLab}</option>
           </select>
           <select
-            aria-label="Filter by status"
+            aria-label={copy.statusFilterLabel}
             className={styles.filterSelect}
             onChange={(event) => setStatus(event.target.value as StatusFilter)}
             value={status}
           >
-            <option value="all">All statuses</option>
-            <option value="launched">Done</option>
-            <option value="in_progress">In Progress</option>
-            <option value="planned">Planned</option>
+            <option value="all">{copy.statuses.all}</option>
+            <option value="launched">{copy.statuses.launched}</option>
+            <option value="in_progress">{copy.statuses.inProgress}</option>
+            <option value="planned">{copy.statuses.planned}</option>
           </select>
           <div className={styles.toolbarSpacer} />
           <div className={styles.viewToggle}>
@@ -92,44 +86,52 @@ export function RoadmapSection({ state }: { state: RoadmapContentState }) {
               onClick={() => setView("board")}
               type="button"
             >
-              <BoardIcon /> Card view
+              <BoardIcon /> {copy.boardView}
             </button>
             <button
               className={`${styles.viewButton} ${view === "gantt" ? styles.viewButtonActive : ""}`}
               onClick={() => setView("gantt")}
               type="button"
             >
-              <GanttIcon /> Gantt
+              <GanttIcon /> {copy.ganttView}
             </button>
           </div>
         </div>
 
         {state.status === "loading" ? (
-          <div className={styles.roadmapGrid} aria-label="Loading roadmap">
+          <div className={styles.roadmapGrid} aria-label={copy.loadingLabel}>
             <div className={styles.loadingCard} />
             <div className={styles.loadingCard} />
           </div>
         ) : null}
         {state.status === "error" ? (
           <div className={styles.errorState} role="alert">
-            Roadmap content could not be loaded. {state.error}
+            {copy.loadError} {state.error}
           </div>
         ) : null}
         {state.status === "ready" && filteredItems.length === 0 ? (
-          <div className={styles.emptyState}>No roadmap items match the selected filters.</div>
+          <div className={styles.emptyState}>{copy.empty}</div>
         ) : null}
         {state.status === "ready" && filteredItems.length > 0 && view === "board" ? (
-          <RoadmapBoard allItems={state.data} items={filteredItems} />
+          <RoadmapBoard allItems={state.data} copy={copy} items={filteredItems} />
         ) : null}
         {state.status === "ready" && filteredItems.length > 0 && view === "gantt" ? (
-          <RoadmapGantt items={filteredItems} />
+          <RoadmapGantt copy={copy} items={filteredItems} />
         ) : null}
       </div>
     </section>
   );
 }
 
-function RoadmapBoard({ allItems, items }: { allItems: RoadmapItem[]; items: RoadmapItem[] }) {
+function RoadmapBoard({
+  allItems,
+  copy,
+  items
+}: {
+  allItems: RoadmapItem[];
+  copy: RoadmapMessages;
+  items: RoadmapItem[];
+}) {
   const years = [...new Set(allItems.map((item) => item.year))].sort();
 
   return (
@@ -148,7 +150,7 @@ function RoadmapBoard({ allItems, items }: { allItems: RoadmapItem[]; items: Roa
                 <span
                   className={`${styles.yearBadge} ${year > 2026 ? styles.yearBadgeUpcoming : ""}`}
                 >
-                  {year > 2026 ? "Upcoming" : "In Progress"}
+                  {year > 2026 ? copy.upcoming : copy.inProgress}
                 </span>
               </div>
               <div className={styles.progressRow}>
@@ -156,7 +158,7 @@ function RoadmapBoard({ allItems, items }: { allItems: RoadmapItem[]; items: Roa
                   <div className={styles.progressFill} style={{ width: `${percent}%` }} />
                 </div>
                 <span className={styles.progressLabel}>
-                  {completed} / {yearItems.length} complete
+                  {completed} / {yearItems.length} {copy.complete}
                 </span>
               </div>
             </header>
@@ -176,7 +178,7 @@ function RoadmapBoard({ allItems, items }: { allItems: RoadmapItem[]; items: Roa
                 return (
                   <section className={styles.quarter} key={quarter}>
                     <div className={styles.quarterLabel}>
-                      {quarterLabels[quarter]}
+                      {copy.quarters[quarter].long}
                       <span className={styles.quarterProgress}>
                         <span
                           className={styles.quarterProgressFill}
@@ -186,10 +188,10 @@ function RoadmapBoard({ allItems, items }: { allItems: RoadmapItem[]; items: Roa
                     </div>
                     <div className={styles.roadmapItems}>
                       {visibleQuarterItems.map((item) => (
-                        <RoadmapItemCard item={item} key={item.id} />
+                        <RoadmapItemCard copy={copy} item={item} key={item.id} />
                       ))}
                       {visibleQuarterItems.length === 0 ? (
-                        <span className={styles.progressLabel}>No matching items</span>
+                        <span className={styles.progressLabel}>{copy.noMatchingItems}</span>
                       ) : null}
                     </div>
                   </section>
@@ -203,9 +205,13 @@ function RoadmapBoard({ allItems, items }: { allItems: RoadmapItem[]; items: Roa
   );
 }
 
-function RoadmapItemCard({ item }: { item: RoadmapItem }) {
+function RoadmapItemCard({ copy, item }: { copy: RoadmapMessages; item: RoadmapItem }) {
   const statusTone =
-    item.status === "launched" ? styles.statusDone : item.status === "in_progress" ? styles.statusActive : "";
+    item.status === "launched"
+      ? styles.statusDone
+      : item.status === "in_progress"
+        ? styles.statusActive
+        : "";
   const badgeTone =
     item.status === "launched"
       ? styles.statusBadgeDone
@@ -220,14 +226,16 @@ function RoadmapItemCard({ item }: { item: RoadmapItem }) {
         <span className={styles.roadmapItemTitle}>{item.title}</span>
         <span className={styles.roadmapItemMeta}>
           <span className={styles.productBadge}>{item.product}</span>
-          <span className={`${styles.statusBadge} ${badgeTone}`}>{statusLabel(item.status)}</span>
+          <span className={`${styles.statusBadge} ${badgeTone}`}>
+            {statusLabel(item.status, copy)}
+          </span>
         </span>
       </div>
     </div>
   );
 }
 
-function RoadmapGantt({ items }: { items: RoadmapItem[] }) {
+function RoadmapGantt({ copy, items }: { copy: RoadmapMessages; items: RoadmapItem[] }) {
   const years = [...new Set(items.map((item) => item.year))].sort();
   const columns = years.flatMap((year) => quarters.map((quarter) => ({ year, quarter })));
 
@@ -236,9 +244,11 @@ function RoadmapGantt({ items }: { items: RoadmapItem[] }) {
       <table className={styles.ganttTable}>
         <thead>
           <tr>
-            <th>Initiative</th>
+            <th>{copy.initiative}</th>
             {columns.map(({ year, quarter }) => (
-              <th key={`${year}-${quarter}`}>{year} {quarter}</th>
+              <th key={`${year}-${quarter}`}>
+                {year} {copy.quarters[quarter].short}
+              </th>
             ))}
           </tr>
         </thead>
@@ -261,7 +271,7 @@ function RoadmapGantt({ items }: { items: RoadmapItem[] }) {
                             : ""
                       }`}
                     >
-                      {statusLabel(item.status)}
+                      {statusLabel(item.status, copy)}
                     </div>
                   ) : null}
                 </td>
@@ -274,10 +284,10 @@ function RoadmapGantt({ items }: { items: RoadmapItem[] }) {
   );
 }
 
-function statusLabel(status: RoadmapStatus) {
-  if (status === "launched") return "Done";
-  if (status === "in_progress") return "In Progress";
-  return "Planned";
+function statusLabel(status: RoadmapStatus, copy: RoadmapMessages) {
+  if (status === "launched") return copy.statuses.launched;
+  if (status === "in_progress") return copy.statuses.inProgress;
+  return copy.statuses.planned;
 }
 
 function SearchIcon() {
